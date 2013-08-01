@@ -1,0 +1,80 @@
+{% extends "market_base.html" %}
+{%block js_file%}
+<script type="text/javascript">
+
+function loadFav(){
+  $.ajax({
+    url:'/loadFav',
+    data:'',
+    success:function(data){
+    	if(data != 0){
+    		var str = data.split('&')[0];
+      	var num = data.split('&')[1];
+      	$("#basket_formset").empty();
+      	for (var i = 0; i < num; i++) {
+	    	  var pid = str.split('^_^')[i].split('|')[0];
+	        var name = str.split('^_^')[i].split('|')[1];
+	        var price = str.split('^_^')[i].split('|')[2];
+	        var image = str.split('^_^')[i].split('|')[3];
+	        $("#basket_formset").append(item_appender(pid,name,price,image));
+		    }
+    	}
+    }
+  }).done(function(){
+  });
+  
+}
+
+function item_appender (pid,name,price,image) {
+	var appender = '<div class="row-fluid" style="line-height:70px;"><div class="span6"><div class="image_container"><a target="_blank" href="/detail/pid/' + pid + '"><img class="thumbnail" style="width:70px;height:70px;" src="/site_media/product/' + image + '"></a></div><h4><a target="_blank" href="/detail/pid/' + pid + '">' + name + '</a></h4><p class="availability instock">有货</p></div><div class="span4"><div class="checkout-quantity"><a class="btn" href="/delFavItem/' + pid + '" class="inline"><i class="icon-trash"></i> 移除</a></div></div><div class="span2"><p class="price_color align-right">￥' + price + '<p></div></div>';
+    return appender;
+}
+
+jQuery(document).ready(function($) {
+	loadFav();
+});
+
+</script>
+{%endblock js_file%}
+{%block other%}
+<!-- breadcrumb -->
+<div class="row-fluid" id="update_info" style="display:none;">
+    <div class="span12">
+        <div id="messages">
+            <div class="alert fade in alert-success">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			<i class="icon-ok-sign"></i>
+        			收藏夹已更新...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-header action">
+<h3>收藏夹</h3>
+</div>
+
+{%if delFav == 1 %}
+<p>您的收藏夹为空...</p>
+<br>
+<p><a href="/" class="btn btn-primary">继续购物</a></p>
+<br>
+{%else%}
+<a class="btn btn-danger pull-right" style="margin-bottom:30px;" href="/delFav"><i class="icon-trash icon-white"></i> 一键清空</a>
+
+<div class="basket-title hidden-phone">
+    <div class="row-fluid">
+        <h4 class="span6">收藏商品</h4>
+        <h4 class="span4">操作</h4>
+        <h4 class="span2 align-right">价格</h4>
+    </div>
+</div>
+
+<div class="basket_summary">
+    <div class="basket-items" id="basket_formset">
+
+    </div>
+</div>
+
+{%endif%}
+{%endblock other%}

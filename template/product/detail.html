@@ -1,0 +1,310 @@
+{% extends "market_base.html" %}
+
+{% block js_file%}
+<script type="text/javascript">
+
+function changeImg(){
+	$("#img1").click(function(){
+		$("#MainImg").attr('src',$(this).attr("src"));
+	});	
+	$("#img2").click(function(){
+		$("#MainImg").attr('src',$(this).attr("src"));
+	});
+}
+
+function loadCompare(){
+    $.ajax({
+    url:'/loadCompare?cate={{data.category}}&myId={{data.product_id}}',
+    data:'',
+    success:function(data){
+        var str = data.split('&')[0];
+        var num = data.split('&')[1];
+        for (var i = 0; i < num; i++) {
+            var id = str.split('^_^')[i].split('|')[0];
+            var title = str.split('^_^')[i].split('|')[1];
+            var price = str.split('^_^')[i].split('|')[2];
+            var image = str.split('^_^')[i].split('|')[3];
+            var name = str.split('^_^')[i].split('|')[4];
+            productAppender(id,title,price,image,name,'compare_tab');
+        };
+    }
+    }).done(function(){
+    });
+}
+
+function loadNewOn(){
+    $.ajax({
+    url:'/loadNewOn?myId={{data.product_id}}',
+    data:'',
+    success:function(data){
+        var str = data.split('&')[0];
+        var num = data.split('&')[1];
+        for (var i = 0; i < num; i++) {
+            var id = str.split('^_^')[i].split('|')[0];
+            var title = str.split('^_^')[i].split('|')[1];
+            var price = str.split('^_^')[i].split('|')[2];
+            var image = str.split('^_^')[i].split('|')[3];
+            var name = str.split('^_^')[i].split('|')[4];
+            productAppender(id,title,price,image,name,'new_tab');
+        };
+    }
+    }).done(function(){
+    });
+}
+
+function productAppender(id,title,price,image,name,tabTag){
+    var appender = '<li class="span2"><div class="thumbnail" style="height:220px;"><a target="_blank" href="/detail/pid/' + id + '"><img src="/site_media/product/' + image + '"></a><div class="caption" style="height:16px;overflow: hidden;"><a target="_blank" href="/detail/pid/' + id + '">' + name + '</a></div><p><span class="label label-info price pull-right">￥ ' + price + '</span></p></div></li>';
+    $("#" + tabTag).append(appender);
+}
+
+function addToCart(){
+	$("#addToCart").click(function(){
+		if({{data.stock_amount}} == 0){
+			$("#alert_info").fadeIn();
+			setTimeout('$("#alert_info").fadeOut()',2000);
+		}else{
+			var num = $("#id_quantity").val();
+		    $.ajax({
+		    url:'/addToCart?pid={{data.product_id}}&amount=' + num,
+		    data:'',
+		    success:function(data){
+		    }
+		    }).done(function(){
+		    	$("#update_info").fadeIn();
+		    	setTimeout('window.location.reload()',2000);
+		    });
+		}
+		
+	});
+}
+
+function addToFav(){
+	$("#addToFav").click(function(){
+	    $.ajax({
+	    url:'/addToFav/pid/{{data.product_id}}',
+	    data:'',
+	    success:function(data){
+	    }
+	    }).done(function(){
+	    	$("#update_fav").fadeIn();
+	    	setTimeout('$("#update_fav").fadeOut()',2000);
+	    });
+	});
+}
+
+function quantityListener(){
+	$("#id_quantity").blur(function(){
+		if($(this).val() <= 0){
+			alert("数量必须大于1！");
+			$(this).val('1');
+		}
+		if($(this).val() > {{data.stock_amount}}){
+			alert("超过存货量！");
+			$(this).val({{data.stock_amount}});
+		}
+	});
+}
+
+jQuery(document).ready(function($) {
+	changeImg();
+	quantityListener();
+	loadCompare();
+	loadNewOn();
+	addToCart();
+	addToFav();
+});
+
+</script>
+{% endblock js_file%}
+
+
+{%block other%}
+
+<div class="row-fluid" id="update_info" style="display:none;">
+    <div class="span12">
+        <div id="messages">
+            <div class="alert fade in alert-success">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			<i class="icon-ok-sign"></i>
+        			购物车已更新...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid" id="update_fav" style="display:none;">
+    <div class="span12">
+        <div id="messages">
+            <div class="alert fade in alert-success">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			<i class="icon-ok-sign"></i>
+        			已加入收藏夹...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid" id="alert_info" style="display:none;">
+    <div class="span12">
+        <div id="messages">
+            <div class="alert fade in alert-error">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			<i class="icon-ok-sign"></i>
+        			货物已售罄...无法加入购物车...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid">
+	<div class="span12">
+
+		<div class="row-fluid">
+			<div class="span9">
+				<h2>{{data.title}}</h2>
+			</div>
+			<div class="span3">
+				<div class="social-icons pull-right">
+					<a><img src="/site_media/img/icon-facebook-like.jpg"></a>
+				</div>
+			</div>
+		</div>
+
+		<div class="row-fluid product-detail">
+
+			<div class="span4">
+				<a class="product-detail-lightbox hidden-phone" title="{{data.name}}">
+					<img class="product-image" id="MainImg" src="/site_media/product/{{data.image}}">
+				</a>
+			</div>
+
+			<div class="span1">
+				<ul class="thumbnails main-product">
+					<li class="span12">
+						<a class="thumbnail">
+							<img id="img1" src="/site_media/product/{{data.image}}"/>
+						</a>
+					</li>
+					<li class="span12">
+						<a class="thumbnail">
+							<img id="img2" src="/site_media/product/{{data.image1}}"/>
+						</a>
+					</li>
+				</ul>
+			</div>
+
+			<div class="span7 well">
+
+				<div class="row-fluid">
+
+					<div class="span7">
+						<strong>商标:</strong> <span>春安出品</span><br><br>
+						<strong>模型:</strong> <span>{{data.name}}</span><br><br>
+						<strong>存货:</strong> <span>{{data.stock_amount}} 件</span><br><br>
+					</div>
+
+					<div class="span5">
+						<span class="label label-important price">￥ {{data.price}}</span>
+					</div>
+<!-- 		            <div class="span6" style="width: 100%; margin-top:20px; margin-left: 0px;">
+						<p class="star">
+							<a id="write_review" href="#" class="btn btn-success btn-small">填写评价</a>
+						</p>
+            		</div> -->
+				</div>
+
+				<div class="row-fluid">
+				    <div class="form-stacked">
+				        <span class="help-block"></span>
+						<div class="control-group ">
+					        <input type="hidden" value="{{data.product_id}}" id="id_product_id">
+						</div>
+						<div class="control-group ">
+							<label class="control-label required">购买数量 <span>*</span></label>
+							<div class="controls">
+								<input type="text" value="1" id="id_quantity">
+							</div>
+						</div>
+				        <div class="form-actions" style="float:right;">
+							<button class="btn" id="addToFav"><i class="icon-star icon-black"></i> 收&nbsp&nbsp&nbsp藏</a></button>
+							<button class="btn btn-primary" style="color:white;" id="addToCart"><i class="icon-shopping-cart icon-white"></i> 购物车</button>
+				        </div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+
+	    <div id="product_description" class="sub-header">
+			<h2>商品详述</h2>
+	    </div>
+	    <p><span>{{data.desc}}</span></p>
+		
+	    <br>
+
+<!--         <div id="disqus_thread"></div>
+	    <script type="text/javascript">
+	        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+	        var disqus_shortname = ''; // required: replace example with your forum shortname
+
+	        /* * * DON'T EDIT BELOW THIS LINE * * */
+	        (function() {
+	            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	        })();
+	    </script>
+	    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+	    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a> -->
+
+	     <div id="disqus_thread"></div>
+	    <script type="text/javascript">
+	        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+	        var disqus_shortname = 'againme'; // required: replace example with your forum shortname
+	        var disqus_developer = 1; // this would set it to developer mode
+	        
+	        /* * * DON'T EDIT BELOW THIS LINE * * */
+	        (function() {
+	            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	        })();
+	    </script>
+	    <!-- <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+	    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a> -->
+    
+
+		<div class="row-fluid">
+			<div class="span12">
+
+				<div class="tabbable">
+
+					<ul class="nav nav-tabs">
+						<li class="active"><a href="#tab1" data-toggle="tab">最新上架</a></li>
+						<li><a href="#tab2" data-toggle="tab">同类推荐</a></li>
+					</ul>
+
+					<div class="tab-content">
+
+						<div class="tab-pane active" id="tab1">
+							<ul class="thumbnails product-list-inline-small" id="new_tab">
+							</ul>
+						</div>
+
+						<div class="tab-pane" id="tab2">
+							<ul class="thumbnails product-list-inline-small" id="compare_tab">
+							</ul>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+	</div>
+</div>
+
+{%endblock other%}

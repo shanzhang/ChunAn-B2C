@@ -1,0 +1,104 @@
+{% extends "market_base.html" %}
+{% block title%}
+<title>春安商城</title>
+{% endblock title%}
+{% block js_file%}
+<script type="text/javascript">
+function market_display(){
+  $.ajax({
+    url:'market_display',
+    data:'',
+    success:function(data){
+      var str = data.split('&')[0];
+      var num = data.split('&')[1];
+      for (var i = 0; i < num; i++) {
+          var id = str.split('^_^')[i].split('|')[0];
+          var price = str.split('^_^')[i].split('|')[1];
+          var name = str.split('^_^')[i].split('|')[2];
+          var image = str.split('^_^')[i].split('|')[3];
+          var amount = str.split('^_^')[i].split('|')[4];
+          if (i < 3){
+            productAppender(id,price,name,image,amount);
+          }else{
+            couponAppender(id,price,name,image);
+          }
+          
+      }
+    }
+  });
+}
+
+function productAppender(id,price,name,image,amount){
+  var appender = '<li class="span4"><div class="thumbnail"><a target="_blank" href="/detail/pid/' + id + '"><img src="/site_media/product/' + image + '"></a><div class="caption" style="height:15px;overflow: hidden;"><a target="_blank" href="/detail/pid/' + id + '">' + name + '</a></div><div class="caption" style="margin-bottom:4%;"><p><span class="label label-info price pull-right">￥ ' + price + '</span></p><p class="instock availability pull-left">已售' + amount + '件</p></div></div></li>';
+  $("#bestSeller").append(appender);
+}
+
+function couponAppender(id,price,name,image){
+  var image2 = image.split('.jpg')[0] + 'b.jpg';
+  var appender = '<li class="span3" style="margin-left:2.56%;width:22%;"><div class="thumbnail light"><a target="_blank" href="/detail/pid/' + id + '"><span class="label label-info price">￥ ' + price + '</span><img data-hover="site_media/product/' + image2 + '" src="site_media/product/' + image + '"></a><div class="caption" style="height:15px;overflow: hidden;"><a target="_blank" href="/detail/pid/' + id + '">' + name + '</a></div></div></li>';
+  $("#coupon").append(appender);
+}
+
+jQuery(document).ready(function($) {
+  market_display();
+});
+
+</script>
+{% endblock js_file%}
+{%block content_market%}
+<div class="row-fluid">
+        <div class="span8">
+          <br><br><br>
+          <div class="row-fluid">
+            <div class="span9">
+              <h4>火爆销售<i class="icon-fire"></i></h4>
+            </div>
+            <div class="span3">
+              <div class="social-icons pull-right">
+                <a href="#"><img src="site_media/img/icon-facebook.png" alt="facebook"></a>
+                <a href="#"><img src="site_media/img/icon-twitter.png" alt="twitter"></a>
+                <a href="#"><img src="site_media/img/icon-linkedin.png" alt="linkedin"></a>
+                <a href="#"><img src="site_media/img/icon-rss.png" alt="rss"></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="row-fluid">
+            <div class="span12">
+              <ul class="thumbnails product-list-inline-small" id="bestSeller">
+                
+              </ul>
+            </div>
+          </div>
+
+        </div>
+        <div class="span4">
+          <br><br><br><br>
+          <div class="row-fluid">
+            <div class="span12">
+              <div class="slider-wrapper theme-light">
+                <div class="ribbon"></div>
+                <div id="slider2" class="nivoslider">
+                  <img src="site_media/img/banner_01.jpg" alt="" title="" />
+                  <img src="site_media/img/banner_02.jpg" alt="" title="" />
+                  <img src="site_media/img/banner_03.jpg" alt="" title="" />
+                </div>
+              </div>
+              <br>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <hr>
+
+      <div class="row-fluid">
+        <div class="span12">
+          <ul class="thumbnails product-list-inline-large" id="coupon">
+
+          </ul>
+        </div>
+      </div>
+
+      
+{%endblock content_market%} 

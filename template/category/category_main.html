@@ -1,0 +1,177 @@
+{% extends "market_base.html" %}
+{% block js_file%}
+<script type="text/javascript">
+var data_info;
+var current_index = 0;
+
+function loadCategory(){
+    $.ajax({
+    url:'category_main',
+    data:'',
+    success:function(data){
+        var str = data.split('&')[0];
+        var num = data.split('&')[1];
+        for (var i = 0; i < num; i++) {
+            var id = str.split('^_^')[i].split('|')[0];
+            var parent_id = str.split('^_^')[i].split('|')[1];
+            var level_id = str.split('^_^')[i].split('|')[2];
+            var desc = str.split('^_^')[i].split('|')[3];
+            if (level_id == 0){
+                $("#main").append("<li id='my_id_" + id + "'><a>" + desc + "</a></li>");
+            }else{
+                $("#my_id_"+parent_id).append("<ul class='nav nav-list'><li class='active_changer' id='my_id_" + id + "'><a>" + desc + "</a></li><ul>");
+            }
+        };
+    }
+    }).done(function(){
+        categorySelect();
+    });
+}
+
+// function fixSideBar(){
+//     $(".bs-docs-sidenav").hover(
+//         function(){
+//         $(this).removeClass('affix');
+//         },
+//         function(){
+//             $(this).addClass('affix');
+//         }
+//     )
+// }
+
+function categorySelect(){
+    $(".active_changer").click(function(){
+        current_index = 0;
+        $("#pro_container").empty();
+        $('#pro_container').css("height",0);
+        $(".active_changer").each(function(){
+            if($(this).hasClass('active')){
+                $(this).removeClass('active');
+            }
+        });
+        $(this).addClass('active');
+        var caption = $(this).find('a').text();
+        $('h3').text(caption);
+        $('#sub_caption').text(caption);
+        var currentCate = $(this).attr('id').split('d_')[1];
+        $.ajax({
+        url:'cid/' + currentCate,
+        data:'',
+        success:function(data){
+            data_info = data;
+            max = (data.split('&')[1] - 15)/6;
+            scrollEventTask(data,15);
+        }
+        }).done(function(){
+        });
+
+    });
+}
+
+function loadAllProduct(){
+        $("#pro_container").empty();
+        $.ajax({
+        url:'loadAllProduct',
+        data:'',
+        success:function(data){
+            data_info = data;
+            max = (data.split('&')[1] - 15)/6;
+            scrollEventTask(data,15);
+        }
+        }).done(function(){
+        });
+
+}
+
+var max = 0;
+
+function scrollListener(){
+    var i = 0;
+    $(window).bind("scroll", function (event) 
+    { 
+         var top = document.documentElement.scrollTop + document.body.scrollTop; 
+         var textheight = $(document).height(); 
+         if (textheight - top - $(window).height() <= 10) 
+            {
+                if (i >= max) 
+                { 
+                    return; 
+                }
+                $('#pro_container').css("height", $(document).height() + 10);
+                i++;
+                scrollEventTask(data_info,6);
+            } 
+    }); 
+}
+
+function scrollEventTask(data,vol){
+    
+    var str = data.split('&')[0];
+    var num = data.split('&')[1];
+    var start_index = current_index;
+    for (var i = current_index; i < num; i++) {
+        var id = str.split('^_^')[i].split('|')[0];
+        var title = str.split('^_^')[i].split('|')[1];
+        var price = str.split('^_^')[i].split('|')[2];
+        var image = str.split('^_^')[i].split('|')[3];
+        productAppender(id,title,price,image);
+        current_index++;
+        if ((current_index - start_index) >= vol)
+            break;
+    }
+}
+
+function productAppender(id,title,price,image,name){
+    var appender = '<li class="span4" style="margin-left:2.56%;width:30%;"><div class="thumbnail"><article class="product_pod" style="height: 240px;"><div class="image_container" style="margin-bottom: 0px;"><a target="_blank" href="/detail/pid/' + id + '"><img src="/site_media/product/' + image + '"></a><div class="caption"  style="height:16px;overflow: hidden;"><a target="_blank" href="/detail/pid/' + id + '">' + title + '</a></div></div><p class="star">尚无评价</p><br><p><span class="label label-info price pull-right">￥ ' + price + '</span></p><p class="instock availability pull-left"><i class="icon-ok"></i> 有货 ...</p></article></div></li>';
+    $(appender).appendTo($("#pro_container"));
+}
+
+jQuery(document).ready(function($) {
+    loadCategory();
+    loadAllProduct();
+    scrollListener();
+    // fixSideBar();
+});
+</script>
+{% endblock js_file%}
+
+{%block other%}
+<!-- breadcrumb -->
+<div class="row">
+    <div class="span12">
+        <ul class="breadcrumb">
+            <li>
+                <a href="home">商城</a>
+                <span class="divider"> - </span>
+            </li>
+            <li class="active" id="sub_caption">所有商品</li>
+        </ul>
+        <div id="messages">
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid">
+    <aside class="sidebar span3" >
+        <div class="side_categories" style="padding: 8px 0;">
+          <ul class="nav nav-list">
+          <li class="nav-header" id="main">目录浏览</li>
+          </ul>
+        </div>
+    </aside><!-- /span3 -->
+    <div class="span9">
+        <div class="sub-header">
+            <h3>所有商品</h3>
+        </div>
+        <section>
+            <div class="row-fluid">
+                <div class="span12">
+                    <ul class="thumbnails product-list-inline-small" id="pro_container">
+
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div><!-- /span9 -->
+</div><!-- /row-fluid -->
+{%endblock other%}

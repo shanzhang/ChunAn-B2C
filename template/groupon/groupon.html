@@ -1,0 +1,257 @@
+{% extends "market_base.html" %}
+{% block js_file%}
+<script type="text/javascript">
+function loadGroupon(){
+    $("#pro_container").empty();
+    $.ajax({
+        url:'/getAllItem',
+        dataType: "json",
+        data:{},
+        success:function(data){
+            var num = data.count;
+            var groupItem = data.groupItem;
+            for (var i = 0; i < num; i++){
+                var gid = data.groupItem[i].gid;
+                var gpid = data.groupItem[i].gpid;
+                var name = data.groupItem[i].name;
+                var amount = data.groupItem[i].amount;
+                var price = data.groupItem[i].price;
+                var net_price = data.groupItem[i].net_price;
+                var description = data.groupItem[i].description;
+                var begin_date = data.groupItem[i].begin_date;
+                var end_date = data.groupItem[i].end_date;
+                var image = data.groupItem[i].image;
+                productAppender(gpid,name,amount,price,net_price,description,begin_date,end_date,image,gid);
+            }
+        }
+    }).done(function(){
+        bindEvent();
+    });
+}
+
+function loadAddress(){
+    $("#addressBook").empty();
+    $.ajax({
+        url:'/loadAddressBook',
+        dataType: "json",
+        data:{},
+        success:function(data){
+            var num = data.count;
+            if (num == 0){
+                $("#alert_noadd").fadeIn();
+                return 0;
+            }
+            var book = data.book;
+            for (var i = 0; i < num; i++){
+                var id = data.book[i].id;
+                var receiver = data.book[i].receiver;
+                var address = data.book[i].address;
+                var zipcode = data.book[i].zipcode;
+                var city = data.book[i].city;
+                var province = data.book[i].province;
+                var phone = data.book[i].phone;
+                address_appender(i+1,id,receiver,address,zipcode,city,province,phone);
+            }
+        }
+    }).done(function(){
+        bindAddress();
+    });
+}
+
+function bindAddress(){
+    $(".address_container").click(function(){
+        $(".address_container").css("border-color","#5CB2ED");
+        $(".address_container").css("background-color","");
+        $(this).css("border-color","#3C3C3C");
+        $(this).css("background-color","#ACD6FF");
+        var id = $(this).attr('id').split('_')[1];
+        addressNo = id;
+    });
+}
+
+var addressNo = 0;
+
+function selectAdButton(){
+    $("#selectAdButton").click(function(){
+        if(addressNo == 0){
+            $("#alert_no_select").fadeIn();
+            setTimeout('$("#alert_no_select").fadeOut()',2000);
+        }else if ($("#quantity").val() == "" || $("#quantity").val() == null){
+             alert("请输入购买数量！");
+        }else{
+            $("#receiver").val($("#mreceiver_" + addressNo).text());
+            $("#phone").val($("#mphone_" + addressNo).text());
+            $("#address").val($("#maddress_" + addressNo).text());
+            $("#zip").val($("#mzipcode_" + addressNo).text());
+            $("#city").val($("#mcity_" + addressNo).text());
+            $("#province").val($("#mprovince_" + addressNo).text());
+            addressNo = 0;
+            $("#hselectAdButton").click();
+            payGroupon();
+        }
+    })
+}
+
+var ggpid;
+var nprice;
+
+function payGroupon(){
+    var price = parseFloat($("#quantity").val()) * parseFloat(nprice);
+    price = price.toString();
+    var shippingName = $("#receiver").val();
+    var address = $("#address").val();
+    var city = $("#city").val();
+    var province = $("#province").val();
+    var zip = $("#zip").val();
+    var phone = $("#phone").val();
+    var amount = $("#quantity").val();
+    $.ajax({
+        url:'/payGroupon?gpid=' + ggpid + '&price=' + price + '&shippingName=' + shippingName + '&address=' + address + '&city=' + city + '&zip=' + zip + '&phone=' + phone + '&province=' + province + '&amount=' + amount + '&gid=' + gid,
+        data:'',
+        success:function(data){
+            if(data == 1){
+                setTimeout('returnToHome()',2000);
+            }
+            else if(data == -1){
+                $("#alert_lack").toggle();
+                setTimeout('returnToHome()',2000);
+            }
+            else{
+                $("#alert_amount").toggle();
+                setTimeout('returnToHome()',2000);
+            }
+        }
+      }).done(function(){
+        window.location.reload();
+      });
+}
+
+function address_appender (i,id,receiver,address,zipcode,city,province,phone) {
+    var appender = '<div id="adc_' + id + '" class="span address_container" style="border: 1px solid #5CB2ED;border-radius: 10px;border-bottom: 3px solid #5CB2ED;border-right: 3px solid #5CB2ED;margin-top:20px;width:47%;margin-left: 2.56%;"><div style="margin:20px;"><h4>地址' + i + '</h4><div>收件人名：<span id="mreceiver_' + id + '" class="address_group_' + id + '">' + receiver + '</span></div><div>街道地址：<span id="maddress_' + id + '" class="address_group_' + id + '">' + address + '</span></div><div>城市名称：<span id="mcity_' + id + '" class="address_group_' + id + '">' + city + '</span></div><div>省份名称：<span id="mprovince_' + id + '" class="address_group_' + id + '">' + province + '</span></div><div>邮政编码：<span id="mzipcode_' + id + '" class="address_group_' + id + '">' + zipcode + '</span></div><div>电话号码：<span id="mphone_' + id + '" class="address_group_' + id + '">' + phone + '<span/></div></div></div>';
+    $("#addressBook").append(appender);
+}
+
+var gid;
+
+function bindEvent(){
+    $(".btn-danger").click(function(){
+        ggpid = parseInt($(this).attr('id').split('_')[1]);
+        nprice = $("#nprice_" + ggpid).text().split(' ')[1];
+        ggpid = ggpid * (-1);
+        gid = parseInt($(this).attr('id').split('_')[2]);
+        $("#chooseAd").click();
+        loadAddress();
+    })
+}
+
+function productAppender(gpid,name,amount,price,net_price,description,begin_date,end_date,image,gid){
+    var b_date = begin_date.split('+')[0];
+    var e_date = end_date.split('+')[0];
+    var appender = '<li class="span4" style="margin-left:2.56%;width:100%;"><div class="thumbnail" style="height:270px;"><span class="label label-important price" id="nprice_' + gpid + '">团购价￥ ' + net_price + '</span><span class="label label-info price pull-right">原价￥ ' + price + '</span><div><img style="height:250px;" class="pull-left" src="/site_media/product/' + image + '"></div><div><p><strong>' + name + '</strong></p></div><div class="instock availability"><p> 剩余：' + amount + '件</p></div><div><p><strong>团购描述：</strong></p><p style="height:77px;overflow: hidden;">' + description + '<p></div><span>起始日期：<strong>' + b_date + '</strong></span><span class="pull-right">结束日期：<strong>' + e_date + '</strong></span><div><br></div><div><button class="btn btn-danger pull-right" id="gpid_' + gpid + '_' + gid + '">一键秒杀</button></div></div></li>';
+    $(appender).appendTo($("#pro_container"));
+}
+
+jQuery(document).ready(function($) {
+    loadGroupon();
+    selectAdButton();
+});
+</script>
+{% endblock js_file%}
+
+{%block other%}
+<div class="row-fluid" id="alert_noadd" style="display:none;">
+    <div class="span12">
+        <div>
+            <div class="alert fade in alert-failure">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+                    您尚未添加地址簿...请先设置收获信息...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-horizontal well" style="display:none;">
+    <div class="control-group">
+        <div class="controls">
+            <input id="receiver" type="text" placeholder="收货人姓名">
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <input id="phone" type="text" placeholder="收货人电话">
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <input id="address" type="text" placeholder="地址信息">
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <input id="city" type="text" placeholder="城市名称">
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <input id="province" type="text" placeholder="省份名称">
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <input id="zip" type="text" placeholder="邮政编码">
+        </div>
+    </div>
+</div>
+
+<a href="#myModal" id="chooseAd" role="button" class="btn btn-info pull-right" data-toggle="modal" style="display:none;"></i>
+
+<!-- Modal -->
+<div id="myModal" class="modal hide fade" style="left:35%;width:60%;top:47%;" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+<!--     <h3 id="myModalLabel">地址簿</h3><br>
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button> -->
+    <div class="row-fluid" id="alert_no_select" style="display:none;">
+        <div class="span12">
+            <div>
+                <div class="alert fade in alert-warning">
+                    <a class="close" data-dismiss="alert" href="#">×</a>
+                        请选择一个地址...
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="modal-body" id="addressBook">
+
+  </div>
+  <div class="modal-body" id="addressBook">
+    <div class="pull-left">购买数量：<input type="text" id="quantity"></div>
+    <div class="pull-right">支付密码：<input type="password" id="paypass"></div>
+  </div>  
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">关闭</button>
+    <button class="btn btn-primary" id="selectAdButton">确认</button>
+    <button data-dismiss="modal" id="hselectAdButton" style="display:none;"></button>
+  </div>
+</div>
+
+<!-- breadcrumb -->
+
+<div class="row-fluid">
+    <div class="span12">
+        <div class="sub-header">
+            <h3>团购商品</h3>
+        </div>
+        <section>
+            <div class="row-fluid">
+                <div class="span12">
+                    <ul class="thumbnails product-list-inline-small" id="pro_container">
+
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div><!-- /span9 -->
+</div><!-- /row-fluid -->
+{%endblock other%}

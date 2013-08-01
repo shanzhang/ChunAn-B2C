@@ -1,0 +1,118 @@
+{% extends "admin/admin.html" %}
+{%block js%}
+<script type="text/javascript">
+
+function checkVerified(){
+      var verified = true;
+      if($("#old_pwd").val() == "") verified = false;
+      if($("#new_pwd").val() == "") verified = false;
+      if($("#con_pwd").val() == "") verified = false;
+      if($("#new_pwd").val() != $("#con_pwd").val()) verified = false;
+      return verified;
+    }
+
+function returnToHome(){
+	window.location.replace('/home');
+}
+
+jQuery(document).ready(function($) {
+	checkVerified();
+});
+
+</script>
+{%endblock js%}
+{%block info%}
+<div class="row-fluid" id="alert_info" style="display:none;">
+    <div class="span12">
+        <div>
+            <div class="alert fade in alert-failure">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			重置密码错误...请重新输入...
+            </div>
+        </div>
+    </div>
+</div>
+{%endblock info%}
+{%block admin%}
+
+<div class="row-fluid">
+	<div class="span12">
+
+		<div class="row-fluid">
+			<div class="span12">
+
+				<ul class="nav nav-tabs">
+					<li id="tab1" class="active"><a href="#step1" data-toggle="tab"><b><i class="icon-wrench"></i> 个人信息</b></a></li>
+				</ul>
+
+				<div class="tab-content">
+					
+					<div class="tab-pane active" id="step1">
+						<div class="row-fluid">
+							{% if fail == 1 %}
+							<div class="row-fluid" id="update_info">
+							    <div class="span12">
+							        <div id="messages">
+							            <div class="alert fade in alert-error">
+							              <a class="close" data-dismiss="alert" href="#">×</a>
+							              <i class="icon-remove"></i>
+							              原密码或新密码输入有误！请重新输入...
+							            </div>
+							        </div>
+							    </div>
+							</div>
+							{% endif %}
+
+							{% if fail == 0 %}
+							<div class="row-fluid" id="update_info">
+							    <div class="span12">
+							        <div id="messages">
+							            <div class="alert fade in alert-success">
+							              <a class="close" data-dismiss="alert" href="#">×</a>
+							              <i class="icon-ok-sign"></i>
+							              密码更改成功！
+							            </div>
+							        </div>
+							    </div>
+							</div>
+							<a href="/" class="btn btn-primary pull-right">回到管理首页</a>
+							{% endif %}
+
+							{% if fail != 0 %}
+							<div class="row-fluid">
+							    <div class="span6 login_form">
+							    	<h4>修改个人信息</h4>
+							        <form action="/changeInfo_admin" method="post" class="form-stacked">
+							            <span class="help-block"></span>
+							            <div class="control-group ">
+							                <label class="control-label required">原密码</label>
+							                <div class="controls">
+							                    <input type="password" id="old_pwd" name="password"/>
+							                </div>
+							                <label class="control-label required">新密码</label>
+							                <div class="controls">
+							                  <input type="password" id="new_pwd" name="new_password"/>
+							                </div>
+							            <label class="control-label required">确认密码</label>
+							              <div class="controls">
+							                <input type="password" id="con_pwd" name="confirm_password"/>
+							              </div>
+							            </div>
+							            <button name="login_submit" type="submit" class="btn btn-info pull-right"><i class="icon-refresh icon-white"></i> 确认修改</button>
+							        </form>
+							    </div>
+							</div>
+							{% endif %}
+						</div>
+					</div>
+
+				</div>
+
+				<br>
+
+			</div>
+		</div>
+
+	</div>
+</div>
+{%endblock admin%}

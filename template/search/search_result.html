@@ -1,0 +1,152 @@
+{% extends "market_base.html" %}
+{% block js_file%}
+<script type="text/javascript">
+
+function loadCategory(){
+    $.ajax({
+    url:'/category_main',
+    data:'',
+    success:function(data){
+        var str = data.split('&')[0];
+        var num = data.split('&')[1];
+        for (var i = 0; i < num; i++) {
+            var id = str.split('^_^')[i].split('|')[0];
+            var parent_id = str.split('^_^')[i].split('|')[1];
+            var level_id = str.split('^_^')[i].split('|')[2];
+            var desc = str.split('^_^')[i].split('|')[3];
+            if (level_id == 0){
+                $("#main").append("<li id='my_id_" + id + "'><a>" + desc + "</a></li>");
+            }else{
+                $("#my_id_"+parent_id).append("<ul class='nav nav-list'><li class='active_changer' id='my_id_" + id + "'><a>" + desc + "</a></li><ul>");
+            }
+        };
+    }
+    }).done(function(){
+        categorySelect();
+    });
+}
+
+function categorySelect(){
+    $(".active_changer").click(function(){
+        $(".active_changer").each(function(){
+            if($(this).hasClass('active')){
+                $(this).removeClass('active');
+            }
+        });
+        $(this).addClass('active');
+        var caption = $(this).find('a').text();
+        $('h1').text(caption);
+        $('#sub_caption').text(caption);
+        var currentCate = $(this).attr('id').split('d_')[1];
+        $.ajax({
+        url:'cid/' + currentCate,
+        data:'',
+        success:function(data){
+            $("#pro_container").empty();
+            var str = data.split('&')[0];
+            var num = data.split('&')[1];
+            for (var i = 0; i < num; i++) {
+                var id = str.split('^_^')[i].split('|')[0];
+                var title = str.split('^_^')[i].split('|')[1];
+                var price = str.split('^_^')[i].split('|')[2];
+                var image = str.split('^_^')[i].split('|')[3];
+                productAppender(id,title,price,image);
+            };
+        }
+        }).done(function(){
+        });
+
+    });
+}
+
+function searchResult(){
+
+        $.ajax({
+        url:'/searchResult?query={{query}}',
+        data:'',
+        success:function(data){
+            $("#pro_container").empty();
+            var str = data.split('&')[0];
+            var num = data.split('&')[1];
+            for (var i = 0; i < num; i++) {
+                var id = str.split('^_^')[i].split('|')[0];
+                var title = str.split('^_^')[i].split('|')[1];
+                var price = str.split('^_^')[i].split('|')[2];
+                var image = str.split('^_^')[i].split('|')[3];
+                var cid = str.split('^_^')[i].split('|')[4];
+                productAppender(id,title,price,image);
+            };
+        }
+        }).done(function(){
+        });
+
+}
+
+function productAppender(id,title,price,image,name){
+    var appender = '<li class="span4" style="margin-left:2.56%;width:30%;"><div class="thumbnail"><article class="product_pod" style="height: 240px;"><div class="image_container" style="margin-bottom: 0px;"><a target="_blank" href="/detail/pid/' + id + '"><img src="/site_media/product/' + image + '"></a><div class="caption"  style="height:16px;overflow: hidden;"><a target="_blank" href="/detail/pid/' + id + '">' + title + '</a></div></div><p class="star">尚无评价</p><br><p><span class="label label-info price pull-right">￥ ' + price + '</span></p><p class="instock availability pull-left"><i class="icon-ok"></i> 有货 ...</p></article></div></li>';
+    $("#pro_container").append(appender);
+}
+
+jQuery(document).ready(function($) {
+    loadCategory();
+    searchResult();
+});
+</script>
+{% endblock js_file%}
+
+{%block search%}
+<form class="form-search header-search" action="search">
+<div class="input-append">
+  <input class="input-large search-query" type="text" value="{{query}}" placeholder="找东西..." name="query">
+  <button class="btn" type="submit">搜索</button>
+</div>
+</form>
+{%endblock search%}
+
+{%block other%}
+<!-- breadcrumb -->
+<div class="row">
+    <div class="span12">
+        <ul class="breadcrumb">
+            <li>
+                <a href="home">商城</a>
+                <span class="divider"> - </span>
+            </li>
+            <li class="active" id="sub_caption">所有商品</li>
+        </ul>
+        <div id="messages">
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid">
+    <aside class="sidebar span3" style="margin-top: 70px;">
+        <div class="side_categories" style="padding: 8px 0;">
+          <ul class="nav nav-list">
+          <li class="nav-header" id="main">目录浏览</li>
+          </ul>
+        </div>
+    </aside><!-- /span3 -->
+    <div class="span9">
+        <div class="sub-header">
+            <h1>所有商品</h1>
+        </div>
+        <section>
+            <div class="row-fluid">
+                <div class="span12">
+                    <ul class="thumbnails product-list-inline-small" id="pro_container">
+
+                    </ul>
+                    <div>
+                        <ul class="pager">
+                        <li class="current">
+                           第 1 页
+                        </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div><!-- /span9 -->
+</div><!-- /row-fluid -->
+{%endblock other%}

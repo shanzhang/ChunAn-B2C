@@ -1,0 +1,208 @@
+{% extends "market_base.html" %}
+{% block title %}
+    <title>用户注册</title>
+{% endblock title%}
+{% block js_file%}
+<script type="text/javascript">
+
+  jQuery(document).ready(function($) {
+
+    $("#username").blur(function(){
+      if($(this).val() != "")
+        $("#imgUsername").attr("src","site_media/img/verified.png");
+      else
+        $("#imgUsername").attr("src","site_media/img/must.png");
+    });
+
+    $("#password").blur(function(){
+      if($(this).val() != "")
+      {
+        $("#imgPass").attr("src","site_media/img/verified.png");
+      }
+      else{
+        $("#imgPass").attr("src","site_media/img/must.png");
+      }
+    });
+
+    $("#password0").blur(function(){
+      if($(this).val() == $("#password").val() && $(this).val() != "")
+        $("#imgPass0").attr("src","site_media/img/verified.png");
+      else
+        $("#imgPass0").attr("src","site_media/img/must.png");
+    });
+
+    $("#email").blur(function(){
+      if(CheckMail() == true)
+        $("#imgEmail").attr("src","site_media/img/verified.png");
+      else
+        $("#imgEmail").attr("src","site_media/img/must.png");
+    });
+
+    $("#submit").click(function(){
+      var username = $("#username").val();
+      var password = $("#password").val();
+      var password0 = $("#password0").val();
+      var email = $("#email").val();
+
+      if(checkVerified()){          
+        $.ajax({
+          url: "createUser?username="+username+"&password="+password+"&email="+email,
+          data:"",
+          success:function(data){
+            if (data == 1) {
+              alert("注册成功...正在登录...");
+              redirectPage();
+            }
+            if (data == 0) {
+              alert("该用户已存在！");
+              window.location.reload();
+            }
+          }
+        });
+        
+      }
+      else{
+        alert("请检查您填写的用户信息!");
+      }
+    });
+
+    function redirectPage(){
+      $("#registerForm").empty();
+      $("#registerForm").append("<h3>注册成功</h3><h4>正在回到商城主页...请稍等</h4>");
+      setTimeout(returnToHome(),2000);
+      
+    }
+
+	function CheckMail() {
+	 var mail = $("#email").val();
+	 var filter  = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+	 if (filter.test(mail)) return true;
+	 else {
+	 return false;}
+	}
+
+    function checkVerified(){
+      var verified = true;
+      if($("#username").val() == "") verified = false;
+      if($("#password").val() == "") verified = false;
+      if($("#password0").val() == "") verified = false;
+      if($("#password").val() != $("#password0").val()) verified = false;
+      if($("#email").val() == "") verified = false;
+      return verified;
+    }
+
+    function returnToHome(){
+      window.location.replace("home");
+    }
+
+  });
+</script>
+{% endblock js_file%}
+{%block other%}
+<!-- breadcrumb -->
+<div class="row-fluid">
+    <div class="span12">
+        <ul class="breadcrumb">
+            <li>
+                <a href="home">商城</a>
+                <span class="divider">/</span>
+            </li>
+            <li class="active">登录/注册页面</li>
+        </ul>
+        <div id="messages">
+        </div>
+    </div>      
+</div>
+
+{% if fail == 1 %}
+<div class="row-fluid" id="update_info">
+    <div class="span12">
+        <div id="messages">
+            <div class="alert fade in alert-failure">
+              <a class="close" data-dismiss="alert" href="#">×</a>
+              <i class="icon-ok-sign"></i>
+              登录失败！请重新登录...
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if fail == 2 %}
+<div class="row-fluid" id="update_info">
+    <div class="span12">
+        <div id="messages">
+            <div class="alert fade in alert-failure">
+              <a class="close" data-dismiss="alert" href="#">×</a>
+              <i class="icon-ok-sign"></i>
+              您的账号已冻结！请联系管理员(admin@chun-an.ecnu.cn)重新激活...
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row-fluid">
+    <div class="span6 login_form">
+        <form action="verifyUser" method="post" class="form-stacked">
+            <h3>
+              
+              用户登录
+            </h3>
+            <span class="help-block"></span>
+            <div class="control-group ">
+                <label class="control-label required">账户名称</label>
+                <div class="controls">
+                    <input type="text" name="username">
+                </div>
+            </div>
+            <div class="control-group ">
+            <label class="control-label required">密码</label>
+            <div class="controls">
+                <input type="password" name="password">
+            </div>
+            </div>
+            <p><a href="/password-reset/">忘记密码</a></p>
+            <button name="login_submit" type="submit" class="btn btn-primary">登录</button>
+        </form>
+    </div>
+
+    <div class="span6 register_form">
+        <form class="form-stacked">
+            <h3>用户注册</h3>
+            <span class="help-block"></span>
+            <div class="control-group ">
+                <label class="control-label required">账户名称 <span>*</span></label>
+                <div class="controls">
+                    <input type="text" id="username">
+                    <image id="imgUsername" src=""/>
+                </div>
+            </div>
+            <div class="control-group ">
+                <label class="control-label required">用户邮箱 <span>*</span></label>
+                <div class="controls">
+                    <input type="text" id="email">
+                    <image id="imgEmail" src=""/>
+                    <p class="help-block">推荐使用ECNU邮箱</p>                    
+                </div>
+            </div>
+            <div class="control-group ">
+                <label class="control-label required">输入密码 <span>*</span></label>
+                <div class="controls">
+                    <input type="password" id="password">
+                    <image id="imgPass" src=""/>
+                </div>
+            </div>
+
+            <div class="control-group ">
+                <label class="control-label required">确认密码 <span>*</span></label>
+                <div class="controls">
+                    <input type="password" id="password0">
+                    <image id="imgPass0" src=""/>
+                </div>
+            </div>
+            <input type="button" class="btn btn-primary" value="注册" id="submit"><i class="icon-chevron-right icon-white js-disable-on-click" data-loading-text="注册中..."></i>
+        </div>
+    </div>
+{%endblock other%}
+

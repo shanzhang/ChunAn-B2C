@@ -1,0 +1,224 @@
+{% extends "admin/admin.html" %}
+{%block js%}
+<script type="text/javascript">
+
+function selectButton(){
+ $("#account").click(function(){
+   $("#search_button").val("account");
+   $("#searchWords").val("");
+ });
+ $("#id").click(function(){
+   $("#search_button").val("id");
+   $("#searchWords").val("");
+ });
+ $("#email").click(function(){
+   $("#search_button").val("email");
+   $("#searchWords").val("");
+ });
+}
+
+function adminUser(id,admin_is_active){
+  if(admin_is_active=='True'||admin_is_active=='False'){
+        $.ajax({
+          url:'/adminUser?id=' + id + '&admin_is_active=' + admin_is_active,
+          data:'',
+          success:function(data){
+              if(data=='1'){
+                var act;
+                if(admin_is_active=="True")
+                  act="False";
+                else
+                  act="True";
+                $("#admin_switch").val(id+'&'+act);
+                if(act=="True"){
+                  $("#admin_switch").text("撤销Admin");
+                  $("#ad_td").text("True ");
+                }
+                else{
+                  $("#admin_switch").text("授权Admin");
+                  $("#ad_td").text("False");
+                }
+                //alert("Begin!");
+              }
+        }
+        }).done(function(){
+        });
+      }else{
+        alert("Error 101! 类型错误！");
+      }
+}
+
+
+function activateUser(id,is_active) {
+      //alert("Begin!");
+      // var info = $("#activity").val();
+      // var id = info.split('&')[0];
+      // var is_active = info.split('&')[1];
+
+      if(is_active=='True'||is_active=='False'){
+        $.ajax({
+          url:'/activateUser?id=' + id + '&is_active=' + is_active,
+          data:'',
+          success:function(data){
+              if(data=='1'){
+                var act;
+                if(is_active=="True")
+                  act="False";
+                else
+                  act="True";
+                $("#activity").val(id+'&'+act);
+                if(act=="True"){
+                  $("#activity").text("冻结");
+                  $("#td_is_active").text("True ");
+                }
+                else{
+                  $("#activity").text("激活");
+                  $("#td_is_active").text("False");
+                }
+                //alert("Begin!");
+              }
+        }
+        }).done(function(){
+        });
+      }else{
+        alert("Error 101! 类型错误！");
+      }
+  }
+
+
+function searchUser() {
+  $("#search_button").click(function(){
+    var type = $("#search_button").val();
+    var keywords = $("#searchWords").val();
+    var g_is_active="";
+    var g_id="";
+    var admin_is_active = '';
+    if(type=='account'||type=='id'||type=='email'){
+      $.ajax({
+        url:'/searchUser?types=' + type + '&keywords=' + keywords,
+        data:'',
+        success:function(data){
+          var str = data.split('&')[0];
+          var num = data.split('&')[1];
+          str = str.split('^_^')[0];
+            var id = str.split('|')[0];
+            var username = str.split('|')[1];
+            var email = str.split('|')[2];
+            var is_staff = str.split('|')[3];
+            var is_superuser = str.split('|')[4];
+            var is_active = str.split('|')[5];
+            var last_login = str.split('|')[6];
+            var date_joined = str.split('|')[7];
+            var active_true='';
+            var tag='';
+            var adminTag = '';
+            admin_is_active = is_superuser;
+            g_is_active=is_active;
+            g_id=id;
+            if (is_superuser=='True'){
+              adminTag = '撤销Admin';
+            }else{
+              adminTag = '授权Admin';
+            }
+            if (is_active=='True'){
+              active_true='checked';
+              tag='冻结';
+            }
+            else{tag=' 激活 ';}
+            var active='<label class="toggle well header-toggle"><input id="view" type="checkbox" '+active_true+'/><p><span>True</span><span>False</span></p><a class="slide-button btn"></a></label>';
+            if ('{{user.username}}' == 'admin') {
+              if(username == 'admin'){
+                var html="<tr><td>"+id+"</td><td>"+username+"</td><td>"+email+"</td><td id='ad_td'>"+is_superuser+"</td><td id=\"td_is_active\">"+is_active+"</td><td>"+last_login+"</td><td>"+date_joined+"</td><td>"+'<button class="btn btn-primary" id="activity" value='+id+'&'+is_active+'>'+tag+'</button></td></tr>';
+              }else{
+                var html="<tr><td>"+id+"</td><td>"+username+"</td><td>"+email+"</td><td id='ad_td'>"+is_superuser+"</td><td id=\"td_is_active\">"+is_active+"</td><td>"+last_login+"</td><td>"+date_joined+"</td><td>"+'<button class="btn btn-primary" id="activity" value='+id+'&'+is_active+'>'+tag+'</button>&nbsp<button class="btn btn-primary" id="admin_switch" value='+id+'&'+is_superuser+'>'+adminTag+'</button></td></tr>';
+              }
+            }else{
+              var html="<tr><td>"+id+"</td><td>"+username+"</td><td>"+email+"</td><td id='ad_td'>"+is_superuser+"</td><td id=\"td_is_active\">"+is_active+"</td><td>"+last_login+"</td><td>"+date_joined+"</td><td>"+'<button class="btn btn-primary" id="activity" value='+id+'&'+is_active+'>'+tag+'</button></td></tr>';
+            }
+            
+            if(num!='0'){
+              $("#content").empty();
+              $("#content").append(html);
+              $("#result").show();
+              $("#alert").attr('style','visibility:hidden');
+            }
+            else{
+              $("#alert").attr('style','visibility:visible');
+            }
+      }
+      }).done(function(){
+        $("#activity").click(function(){
+          activateUser(g_id,g_is_active);
+          if(g_is_active=="False")
+            g_is_active="True"
+          else
+            g_is_active="False"
+      });
+        $("#admin_switch").click(function(){
+          adminUser(g_id,admin_is_active);
+          if(admin_is_active=="False")
+            admin_is_active="True"
+          else
+            admin_is_active="False"
+      });
+    });
+    }else{
+      alert("Error 101! 类型错误！");
+    }
+  })
+}
+
+jQuery(document).ready(function($) {
+  $("#account").click();
+  
+   selectButton();
+   searchUser();
+});
+
+</script>
+{%endblock js%}
+
+{%block admin%}
+<div class="row-fluid">
+<div id="alert" style="visibility:hidden" class="alert alert-error">
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+          <strong>提示!</strong> 无结果或无搜索词输入，请输入准确的搜索词
+</div>
+<legend>搜索类型</legend>
+<div class="btn-group" align="center" data-toggle="buttons-radio">
+  <button type="button" id="account" class="radioButton btn btn-primary">按账户</button>
+  <button type="button" id="id" class="radioButton btn btn-primary">按ID</button>
+  <button type="button" id="email" class="radioButton btn btn-primary">按Email</button>
+</div>
+<br/>
+<div align="center">
+<input type="text" style="margin-top:8px;" id="searchWords"/>
+<button class="btn btn-primary" id="search_button" value="account">搜索</button>
+</div>
+
+</div>
+<br/>
+<br/>
+<br/>
+
+<div id="result" style="display:none">
+	<table class="table table-hover">
+	<thead>
+    <tr>
+      <th>#</th>
+      <th>用户名</th>
+      <th>邮箱</th>
+      <th>管理员</th>
+      <th>激活状态</th>
+      <th>最近登录</th>
+      <th>注册日期</th>
+      <th>操作</th>
+    </tr>
+  	</thead>
+  	<tbody id="content">
+  	</tbody>
+	</table>
+</div>
+
+
+{%endblock admin%}

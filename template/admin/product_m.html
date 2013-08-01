@@ -1,0 +1,339 @@
+{% extends "admin/admin.html" %}
+{%block js%}
+<script type="text/javascript">
+
+function loadProductCategory(){
+	$.ajax({
+	url:'loadLeafCategory',
+	data:'',
+	success:function(data){
+		var str = data.split('&')[0];
+	    var num = data.split('&')[1];
+	    for (var i = 0; i < num; i++) {
+	    	var id = str.split('^_^')[i].split('|')[0];
+	    	var desc = str.split('^_^')[i].split('|')[1];
+	    	if ("{{pid}}" == 0)
+		    	$("#idState").append("<OPTION value='" + id + "'>" + id + ' : ' + desc + "</OPTION>");
+	    	$("#newCate").append("<OPTION value='" + id + "'>" + id + ' : ' + desc + "</OPTION>");
+	    };
+	}
+	}).done(function(){
+	});
+}
+
+function loadProduct(){
+	$("#idState").change(function() {
+		var cate = $("#idState").find('option:selected').val();
+		$("#name").empty();
+		$.ajax({
+		url:'loadProduct?cate=' + cate,
+		data:'',
+		success:function(data){
+			var str = data.split('&')[0];
+		    var num = data.split('&')[1];
+		    $("#name").append("<OPTION value='-1'>请选择商品</OPTION>");
+		    for (var i = 0; i < num; i++) {
+		    	var id = str.split('^_^')[i].split('|')[0];
+		    	var desc = str.split('^_^')[i].split('|')[1];
+		    	$("#name").append("<OPTION value='" + id + "'>" + id + ' : ' + desc + "</OPTION>");
+		    };
+		}
+		}).done(function(){
+		});
+    });
+}
+
+function loadProductInfo(){
+	$("#name").change(function() {
+		var pid = $("#name").find('option:selected').val();
+		$.ajax({
+		url:'loadProductInfo?pid=' + pid,
+		data:'',
+		success:function(data){
+			var str = data.split('&')[0];
+			str = str.split('^_^')[0];
+		    var name = str.split('|')[0];
+		    var price = str.split('|')[1];
+		    var description = str.split('|')[2];
+		    var meta_keywords = str.split('|')[3];
+		    var meta_title = str.split('|')[4];
+		    var stock_amount = str.split('|')[5];
+		    var image = str.split('|')[6];
+		    $("#rename").val(name);
+		    $("#price").val(price);
+		    $("#desc").val(description);
+		    $("#keywords").val(meta_keywords);
+		    $("#title").val(meta_title);
+		    $("#amount").val(stock_amount);
+		    $("#image").val(image);
+		}
+		}).done(function(){
+		});
+    });
+}
+
+function modifyProduct() {
+	$("#modifyProduct").click(function(){
+		var cate = $("#newCate").find('option:selected').val();
+		var product_id = $("#name").find('option:selected').val();
+		var name = $("#rename").val();
+		var price = $("#price").val();
+		var desc = $("#desc").val();
+		var keywords = $("#keywords").val();
+		var title = $("#title").val();
+		var active = $(":radio:checked").val();
+		var amount = $("#amount").val();
+		var image = $("#image").val();
+		if( cate > 0 && product_id > 0 && checkMustFill()){
+			$.ajax({
+				url:'modifyProduct?cate=' + cate + '&name=' + name + '&price=' + price + '&desc=' + desc + '&keywords=' + keywords + '&title=' + title + '&active=' + active + '&amount=' + amount + '&image=' + image + "&product_id=" + product_id,
+				data:'',
+				success:function(data){
+					if(data == 1){
+						$("#update_info").fadeIn();
+						setTimeout('window.location.reload()',2000);
+					}else{
+						$("#alert_info").fadeIn();
+						setTimeout('$("#alert_info").fadeOut()',2000);
+					}
+				}
+			}).done(function(){
+			});
+		}else{
+			alert("请填写完整！");
+		}
+	})
+}
+
+function searchProduct(){
+	$("#searchBtn").click(function(){
+		var query = $("#query").val();
+		$("#container").empty();
+		$.ajax({
+			url:'search_product?query=' + query,
+			data:'',
+			success:function(data){
+					if(data == 0){
+						$("#alert_info").fadeIn();
+						setTimeout('$("#alert_info").fadeOut()',2000);
+					}
+					var num = data.split('&')[1];
+					var str = data.split('&')[0];
+					$("#container").append("<table class='table table-hover'><tbody id='table'></tbody></table>");					
+					for (var i = 0; i < num ; i++){
+						var id = str.split('^_^')[i].split('|')[0];
+				    	var name = str.split('^_^')[i].split('|')[1];
+				    	var cid = str.split('^_^')[i].split('|')[2];
+				    	var cname = str.split('^_^')[i].split('|')[3];
+				    	$("#table").append('<tr><td>商品编号：' + id + '</td><td>商品名称：' + name + '</td><td><button class="btn btn-info"><a href="mod_product?product_id=' + id + '&cid=' + cid + '&name=' + name + '&cname=' + cname +'" style="color:white;"><i class="icon-edit icon-white"></i> 编辑</a></button></td><td><button class="btn btn-danger pull-right"><a href="deleteProduct?product_id='+ id + '" style="color:white;"><i class="icon-remove icon-white"></i> 删除</button></td></tr>');
+					}
+			}
+		});
+	})
+}
+
+function radioChange(){
+	$("#yes").click(function(){
+		$("#no").attr('checked',false);
+	});
+	$("#no").click(function(){
+		$("#yes").attr('checked',false);
+	});
+}
+
+function checkMustFill(){
+	var all_filled = 1;
+	$(".must_fill").each(function(){
+		if ( all_filled == 0) return all_filled;
+		if ( $(this).val() == "")
+			all_filled = 0;
+	});
+	return all_filled;
+}
+
+function queryLoad(){
+	var pid = "{{pid}}";
+	var cid = "{{cid}}";
+	$("#idState").empty();
+	$("#idState").append("<option value='{{cid}}'>{{cid}} : {{cname}}</option>");
+	$("#idState option[value='{{cid}}']").attr('selected','selected');
+	$("#name").empty();
+	$("#name").append("<option value='{{pid}}'>{{pid}} : {{name}}</option>");
+	$("#name option[value='{{pid}}']").attr('selected','selected');
+	$.ajax({
+		url:'loadProductInfo?pid=' + pid,
+		data:'',
+		success:function(data){
+			var str = data.split('&')[0];
+			str = str.split('^_^')[0];
+		    var name = str.split('|')[0];
+		    var price = str.split('|')[1];
+		    var description = str.split('|')[2];
+		    var meta_keywords = str.split('|')[3];
+		    var meta_title = str.split('|')[4];
+		    var stock_amount = str.split('|')[5];
+		    var image = str.split('|')[6];
+		    $("#rename").val(name);
+		    $("#price").val(price);
+		    $("#desc").val(description);
+		    $("#keywords").val(meta_keywords);
+		    $("#title").val(meta_title);
+		    $("#amount").val(stock_amount);
+		    $("#image").val(image);
+		}
+		}).done(function(){
+	});
+}
+
+jQuery(document).ready(function($) {
+	if("{{pid}}" == 0){
+		loadProductCategory();
+		modifyProduct();
+		loadProduct();
+		radioChange();
+		searchProduct();
+		loadProductInfo();
+	}else{
+		loadProductCategory();
+		modifyProduct();
+		loadProduct();
+		radioChange();
+		searchProduct();
+		queryLoad();
+	}
+
+	if(!$('#myCanvas').tagcanvas({
+	  textColour: 'black',
+	  textFont:'Impact,"Arial Black",sans-serif',
+	  textHeight:25,
+	  outlineColour: '#BBBBBB',
+	  reverse: true,
+	  depth: 0.8,
+	  maxSpeed: 0.05,
+	},'tags')) 
+	{
+	  // something went wrong, hide the canvas container
+	  $('#myCanvasContainer').hide();
+	}
+	
+});
+</script>
+{%endblock js%}
+{%block search%}
+<div class="form-search header-search">
+	<div class="input-append">
+	  <input class="input-large search-query" type="text" placeholder="找商品..." id="query">
+	  <button class="btn" id="searchBtn">搜索</button>
+	</div>
+</div>
+{%endblock search%}
+{%block info%}
+
+<div class="row-fluid" id="alert_info" style="display:none;">
+    <div class="span12">
+        <div id="messages">
+            <div class="alert fade in alert-failure">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			<i class="icon-ok-sign"></i>
+        			操作失败...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid" id="update_info" style="display:none;">
+    <div class="span12">
+        <div id="messages">
+            <div class="alert fade in alert-success">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			<i class="icon-ok-sign"></i>
+        			操作成功...
+            </div>
+        </div>
+    </div>
+</div>
+
+{%endblock info%}
+{%block admin%}
+<div class="alert alert-info">
+            <strong>Notice!</strong> 可通过上方搜索按钮查找商品,进行编辑或删除操作</a>.
+</div>
+<div class="" style="margin-bottom:20px;" id="container">
+        <legend>编辑商品</legend>
+        <div class="span9 pull-right" style="margin-right:3%;">
+        	<div id="myCanvasContainer">
+		      <canvas id="myCanvas" width="800px" height="800px">
+		      </canvas>
+		    </div>
+	        <div id="tags">
+		      <ul>
+		        <li><a href="">绘儿乐 双面画板</a></li>
+		        <li><a href="">音乐健身架</a></li>
+		        <li><a href="">蹦跳欢乐园</a></li>
+		        <li><a href="">布袋积木</a></li>
+		        <li><a href="">三阶白色魔方</a></li>
+		        <li><a href="">欢乐纸牌</a></li>
+		        <li><a href="">木马智慧</a></li>
+		        <li><a href="">国际象棋</a></li>
+		        <li><a href="">领袖级铁皮</a></li>
+		        <li><a href="">变形金刚</a></li>
+		      </ul>
+		    </div>
+        </div>          
+        <span class="help-block"></span>
+        <div class="control-group ">
+            <label class="control-label required">商品原目录</label>
+            <SELECT id="idState" style="width:150">
+				<OPTION value="-1">请选择商品目录</OPTION>
+			</SELECT>
+        </div>
+        <div class="control-group ">
+        	<label class="control-label required">选择商品</label>
+        	<SELECT id="name" style="width:150">
+				<OPTION value="-1">请选择要修改的商品</OPTION>
+			</SELECT>
+        </div>
+        <div class="control-group ">
+            <label class="control-label required">修改目录</label>
+            <SELECT id="newCate" style="width:150">
+				<OPTION value="-1">请选择更改后的目录</OPTION>
+			</SELECT>
+	        <label class="control-label required">修改名称</label>
+	        <div class="controls">
+	            <input type="text" class="must_fill" id="rename">
+	        </div>
+	        <label class="control-label required">修改价格</label>
+	        <div class="input-prepend">
+	            <span class="add-on">￥</span>
+	            <input type="text" class="must_fill" style="width:180px;" id="price">
+	        </div>
+	        <label class="control-label required">修改关键字</label>
+	        <div class="controls">
+	            <input type="text" class="must_fill" id="keywords">
+	        </div>
+	        <label class="control-label required">修改标题</label>
+	        <div class="controls">
+	            <input type="text" class="must_fill" id="title">
+	        </div>
+	        <label class="control-label required">修改数量</label>
+	        <div class="controls">
+	            <input type="text" class="must_fill" id="amount">
+	        </div>
+	        <label class="control-label required">商品图片</label>
+	        <div class="controls">
+	            <input type="text" class="must_fill" id="image">
+	        </div>
+			<label class="control-label required">商品描述</label>
+	        <div class="controls">
+	            <textarea row="3" class="must_fill" id="desc"></textarea>
+	        </div>	        
+	        <label class="control-label required">是否上架</label>
+	        <div class="controls">
+	        	<input type="radio" value="1" id="yes" checked="true"/> 是
+	        	<input type="radio" value="0" id="no" style="margin-left: 155px;"/> 否
+	        </div>
+        </div>
+        <button class="btn btn-primary" id="modifyProduct">编辑</button>
+</div>
+<br>
+{%endblock admin%}

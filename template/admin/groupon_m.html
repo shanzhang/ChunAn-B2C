@@ -1,0 +1,103 @@
+{% extends "admin/admin.html" %}
+{%block css%}
+<link href="/site_media/css/datetimepicker.css" rel="stylesheet" media="screen">
+{%endblock css%}
+{%block js%}
+<script type="text/javascript" src="/site_media/js/bootstrap-datetimepicker.js" charset="UTF-8"></script>
+<script type="text/javascript" src="/site_media/js/locales/bootstrap-datetimepicker.zh-CN.js" charset="UTF-8"></script>
+<script type="text/javascript">
+function loadGroupon(){
+    $("#pro_container").empty();
+    $.ajax({
+        url:'/display_Groupon',
+        dataType: "json",
+        data:{},
+        success:function(data){
+            var num = data.count;
+            var groupItem = data.groupItem;
+            for (var i = 0; i < num; i++){
+                var gpid = data.groupItem[i].gpid;
+                var name = data.groupItem[i].name;
+                var amount = data.groupItem[i].amount;
+                var price = data.groupItem[i].price;
+                var net_price = data.groupItem[i].net_price;
+                var description = data.groupItem[i].description;
+                var begin_date = data.groupItem[i].begin_date;
+                var end_date = data.groupItem[i].end_date;
+                var image = data.groupItem[i].image;
+                var sell_amount = data.groupItem[i].sell_amount;
+                productAppender(gpid,name,amount,price,net_price,description,begin_date,end_date,image,sell_amount);
+            }
+        }
+    }).done(function(){
+        bindEvent();
+    });
+}
+
+function productAppender(gpid,name,amount,price,net_price,description,begin_date,end_date,image,sell_amount){
+    var b_date = begin_date.split('+')[0];
+    var e_date = end_date.split('+')[0];
+    var total = parseFloat(net_price) * parseInt(sell_amount);
+    var appender = "<tr><td>" + name + "</td><td>" + b_date + "</td><td><div class='controls input-append date form_datetime' data-date='2013-01-01T00:00:00Z' data-date-format='yyyy-mm-dd hh:ii' data-link-field='dtp_input1'><input size='16' type='text' class='must_fill' id='end_date_" + gpid + "' value='" + e_date + "' style='width:153px;' readonly><span class='add-on'><i class='icon-remove'></i></span><span class='add-on'><i class='icon-th'></i></span></div><input type='hidden' id='dtp_input1' value='' /></td><td>" + sell_amount + " 件</td><td>" + amount + " 件</td><td>￥ " + price + "</td><td>￥ " + net_price + "</td><td>￥ " + total + "</td></tr>";
+    $(appender).appendTo($("#table"));
+}
+
+function bindEvent(){
+	$(".delay-btn").click(function(){
+		var ggpid = $(this).attr('id').split('_')[1];
+		var end_date = $("#end_date_" + ggpid).val();
+		$.ajax({
+			url:'delay_groupon?end_date=' + end_date + '&gpid=' + ggpid,
+			data:'',
+			success: function(data){
+				if(data == 1){
+					alert("延期成功！");
+					window.location.reload();
+				}
+			}
+		})
+	})
+}
+
+jQuery(document).ready(function($) {
+    loadGroupon();
+});
+</script>
+{%endblock js%}
+
+{%block info%}
+{%endblock info%}
+{%block admin%}
+<!-- breadcrumb -->
+
+<div class="row-fluid">
+    <div class="span12">
+        <div class="sub-header">
+            <h3>编辑团购</h3>
+        </div>
+        <section>
+            <div class="row-fluid">
+                <div class="span12">
+                    <table class="table table-bordered table-hover">
+                        <tbody id="table">
+                            <tr style='background-color:#F0F0F0;'><td>商品名称</td><td>起始日期</td><td>结束日期</td><td>销量</td><td>剩余</td><td>原价</td><td>现价</td><td>销售额</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div><!-- /span9 -->
+    <script type="text/javascript">
+    $('.form_datetime').datetimepicker({
+        weekStart: 1,
+        todayBtn:  1,
+        autoclose: 1,
+        todayHighlight: 1,
+        startView: 2,
+        forceParse: 0,
+        showMeridian: 1
+    });
+</script>
+</div><!-- /row-fluid -->
+
+{%endblock admin%}

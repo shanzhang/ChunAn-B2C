@@ -1,0 +1,69 @@
+{% extends "admin/admin.html" %}
+{%block js%}
+<script type="text/javascript">
+function loadGroupon(){
+    $("#pro_container").empty();
+    $.ajax({
+        url:'/display_Groupon?all=1',
+        dataType: "json",
+        data:{},
+        success:function(data){
+            var num = data.count;
+            var groupItem = data.groupItem;
+            for (var i = 0; i < num; i++){
+                var gpid = data.groupItem[i].gpid;
+                var name = data.groupItem[i].name;
+                var amount = data.groupItem[i].amount;
+                var price = data.groupItem[i].price;
+                var net_price = data.groupItem[i].net_price;
+                var description = data.groupItem[i].description;
+                var begin_date = data.groupItem[i].begin_date;
+                var end_date = data.groupItem[i].end_date;
+                var image = data.groupItem[i].image;
+                var sell_amount = data.groupItem[i].sell_amount;
+                productAppender(gpid,name,amount,price,net_price,description,begin_date,end_date,image,sell_amount);
+            }
+        }
+    }).done(function(){
+        bindEvent();
+    });
+}
+
+function productAppender(gpid,name,amount,price,net_price,description,begin_date,end_date,image,sell_amount){
+    var b_date = begin_date.split('+')[0];
+    var e_date = end_date.split('+')[0];
+    var total = parseFloat(net_price) * parseInt(sell_amount);
+    var appender = "<tr><td>" + name + "</td><td>" + b_date + "</td><td>" + e_date + "</td><td>" + sell_amount + " 件</td><td>" + amount + " 件</td><td>￥ " + price + "</td><td>￥ " + net_price + "</td><td>￥ " + total + "</td></tr>";
+    $(appender).appendTo($("#table"));
+}
+
+jQuery(document).ready(function($) {
+    loadGroupon();
+});
+</script>
+{%endblock js%}
+
+{%block info%}
+{%endblock info%}
+{%block admin%}
+<!-- breadcrumb -->
+
+<div class="row-fluid">
+    <div class="span12">
+        <div class="sub-header">
+            <h3>团购商品</h3>
+        </div>
+        <section>
+            <div class="row-fluid">
+                <div class="span12">
+                    <table class="table table-bordered table-hover">
+                        <tbody id="table">
+                            <tr style='background-color:#F0F0F0;'><td>商品名称</td><td>起始日期</td><td>结束日期</td><td>销量</td><td>剩余</td><td>原价</td><td>现价</td><td>销售额</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div><!-- /span9 -->
+</div><!-- /row-fluid -->
+{%endblock admin%}

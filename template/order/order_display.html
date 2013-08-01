@@ -1,0 +1,155 @@
+{% extends "market_base.html" %}
+{%block js_file%}
+<script type="text/javascript">
+function loadOrderList(){
+  $("#table").empty();
+  var total = 0.0;
+  $.ajax({
+    url:'/loadOrderList',
+    data:'',
+    success:function(data){
+    	if(data != 0){
+    		var str = data.split('^&^')[0];
+        	var orderCount = data.split('^&^')[1];
+        	for (var i = 0; i < orderCount; i++) {
+                var flag = 1;
+        		var orderItemCount = str.split('^_^')[i].split('&')[1];
+        		var orderItemData = str.split('^_^')[i].split('&')[0];
+        		var head = orderItemData.split('|h|')[0];
+        		orderItemData = orderItemData.split('|h|')[1];
+        		if(head.split('|')[2] == 1){
+        			if (parseInt(head.split('|')[0]) < 0) {
+                        flag = 0;
+        				var newOrderId = parseInt(head.split('|')[0]) * (-1);
+						$("#table").append("<tr style='background-color:#F0F0F0;'><td><strong>订单编号：</strong><img src='/site_media/img/tuan.png'/>&nbsp" + newOrderId + "</td><td><strong>成交时间：</strong>" + head.split('|')[1] + "</td><td><strong>订单状态：</strong>已付款</td></tr>");
+        			}else{
+        				$("#table").append("<tr style='background-color:#F0F0F0;'><td><strong>订单编号：</strong>" + head.split('|')[0] + "</td><td><strong>成交时间：</strong>" + head.split('|')[1] + "</td><td><strong>订单状态：</strong>已付款</td></tr>");
+        			}
+        			
+        		}
+	        		
+	        	if(head.split('|')[2] == 2){
+	        		if (parseInt(head.split('|')[0]) < 0) {
+                        flag = 0;
+        				var newOrderId = parseInt(head.split('|')[0]) * (-1);
+        				$("#table").append("<tr style='background-color:#F0F0F0;'><td><strong>订单编号：</strong><img src='/site_media/img/tuan.png'/>&nbsp" + newOrderId + "</td><td><strong>成交时间：</strong>" + head.split('|')[1] + "</td><td><strong>订单状态：</strong>已发货 <button class='btn btn-success pull-right' style='height:24px;' id='receive_" + head.split('|')[0] + "'>确认收货</button></td></tr>");
+        			}else{
+        				$("#table").append("<tr style='background-color:#F0F0F0;'><td><strong>订单编号：</strong>" + head.split('|')[0] + "</td><td><strong>成交时间：</strong>" + head.split('|')[1] + "</td><td><strong>订单状态：</strong>已发货 <button class='btn btn-success pull-right' style='height:24px;' id='receive_" + head.split('|')[0] + "'>确认收货</button></td></tr>");
+        			}
+	        	}
+	        		
+	        	if(head.split('|')[2] == 3){
+	        		if (parseInt(head.split('|')[0]) < 0) {
+                        flag = 0;
+        				var newOrderId = parseInt(head.split('|')[0]) * (-1);
+        				$("#table").append("<tr style='background-color:#F0F0F0;'><td><strong>订单编号：</strong><img src='/site_media/img/tuan.png'/>&nbsp" + newOrderId + "</td><td><strong>成交时间：</strong>" + head.split('|')[1] + "</td><td><strong>订单状态：</strong>已收到</td></tr>");
+        			}else{
+        				$("#table").append("<tr style='background-color:#F0F0F0;'><td><strong>订单编号：</strong>" + head.split('|')[0] + "</td><td><strong>成交时间：</strong>" + head.split('|')[1] + "</td><td><strong>订单状态：</strong>已收到</td></tr>");
+        			}
+	        	}
+	        		
+        		for (var k = 0; k < orderItemCount; k++){
+			        var name = orderItemData.split('||')[k].split('|')[0];
+			        var price = orderItemData.split('||')[k].split('|')[1];
+			        var amount = orderItemData.split('||')[k].split('|')[2];
+			        var pid = orderItemData.split('||')[k].split('|')[3];
+			        var total = (parseFloat(price) * parseFloat(amount)).toFixed(2);
+			        $("#table").append(item_appender(name,price,amount,pid,total,flag));
+        		}
+        		$("#table").append("<tr><td colspan='3'><div class='pull-right' style='margin-right:10%;'><strong>总付款：</strong>￥ " + head.split('|')[3] + " </div></td></tr>");
+        		$("#table").append("<tr><td colspan='3' style='height:20px;'></td></tr>");
+		    }
+    	}
+    }
+  }).done(function(){
+  	receiveEvent();
+  });
+}
+
+function receiveEvent(){
+	$(".btn-success").click(function(){
+		var oid = $(this).attr('id').split('_')[1];
+		$.ajax({
+			url:'receiveProduct?oid=' + oid,
+			data:'',
+			success:function(data){
+				if(data == 1){
+					$("#alert_receive").fadeIn();
+					setTimeout('$("#alert_receive").fadeOut()',2000);
+					loadOrderList();
+				}
+			}
+		})
+	})
+}
+
+function item_appender (name,price,amount,pid,total,flag) {
+    if(flag == 0){
+        var appender = '<tr><td>' + name + '</td><td>￥ ' + price + ' x ' + amount + '</td><td>￥ ' + total + '</td></tr>';
+    }
+    else{
+        var appender = '<tr><td><a target="_blank" href="/detail/pid/' + pid + '">' + name + '</a></td><td>￥ ' + price + ' x ' + amount + '</td><td>￥ ' + total + '</td></tr>';
+    }
+    return appender;
+}
+
+jQuery(document).ready(function($) {
+	loadOrderList();
+});
+
+</script>
+{%endblock js_file%}
+{%block other%}
+<div class="row-fluid" id="alert_info" style="display:none;">
+    <div class="span12">
+        <div>
+            <div class="alert fade in alert-failure">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			<i class="icon-ok-sign"></i>
+        			尚未有您的购物记录...
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row-fluid" id="alert_receive" style="display:none;">
+    <div class="span12">
+        <div>
+            <div class="alert fade in alert-success">
+                <a class="close" data-dismiss="alert" href="#">×</a>
+        			<i class="icon-ok-sign"></i>
+        			确认收货更新完毕...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid">
+	<div class="span12">
+		<div class="row-fluid">
+			<div class="span12">
+				<ul class="nav nav-tabs">
+					<li id="tab1" class="active"><a><b><i class="icon-file"></i> 订单记录</b></a></li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active">
+						<div class="row-fluid">
+							<div class="span12">
+								<table class="table table-bordered table-hover">
+									<tbody id="table">
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row-fluid">
+							<div class="span4">
+								<a class="btn" href="/" style="color:black;"><i class="icon-chevron-left"></i> 返回商城</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<br>
+			</div>
+		</div>
+	</div>
+</div>
+{%endblock other%}
